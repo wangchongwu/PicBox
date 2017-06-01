@@ -5,7 +5,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
     picshower=new PicBox(this);
-    picshower->setImg( QImage("C:\\Users\\WangChongwu.HP-DARKGHOST\\Desktop\\lena512color.tif"));
+    picshower->setImg( QImage("C:\\Users\\wcw\\Desktop\\170419-005316767.jpg"));
     setCentralWidget(picshower);
 }
 
