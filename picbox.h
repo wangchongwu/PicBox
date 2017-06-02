@@ -1,4 +1,5 @@
 //一个Qt图像显示类，封装图像显示、放缩、平移等操作
+//采用opencv Mat类作为数据,封装了到QImage的接口
 
 
 #ifndef PICBOX_H
@@ -21,26 +22,30 @@ class PicBox : public QGraphicsView//继承
     Q_OBJECT
 public:
     PicBox(QWidget *parent);
-    void setImg(QImage);
 	void setImg(cv::Mat);
-private:
-    QGraphicsScene* imgScene;
-    QGraphicsPixmapItem* pixmapItem;
-    QImage currentImg;
-    double m_scaleFactor;//放缩系数
+
 protected://重写鼠标事件
     void wheelEvent(QWheelEvent* event);
     void mousePressEvent(QMouseEvent *event);
 	void contextMenuEvent(QContextMenuEvent *event);
-
-public slots:
-    void zoomIn();
-    void zoomOut();
+	
 
 private slots:
+	void openImg();
+	void clearImg();
+	void saveImg();
+	void stretchImg(int);
+private:
+	QGraphicsScene* imgScene;
+	QGraphicsPixmapItem* pixmapItem;
+	Mat srcImg;//原始cv图像
+	Mat dstImg;//临时cv图像,保存中间状态
+	double m_scaleFactor;//放缩系数
 
+private:
+	void zoomIn();
+	void zoomOut();
 };
-
 
 
 static QImage cvMat2QImage(const cv::Mat & mat);//转换函数

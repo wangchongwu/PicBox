@@ -1,9 +1,10 @@
 #include "picbox.h"
+#include <QDebug>
+#include <QFileDialog>
 PicBox::PicBox(QWidget *parent)
     :QGraphicsView(parent)
 {
-
-    pixmapItem = new QGraphicsPixmapItem();
+	pixmapItem = new QGraphicsPixmapItem();
     imgScene = new QGraphicsScene();
     this->setDragMode(QGraphicsView::RubberBandDrag);//可拖放显示一个蓝色框？？
     this->setOptimizationFlags(QGraphicsView::DontSavePainterState);
@@ -12,41 +13,65 @@ PicBox::PicBox(QWidget *parent)
 
     m_scaleFactor = 1;//初始化放缩系数
  // this->setDragMode(QGraphicsView::ScrollHandDrag);
+
+
+
 }
 
-void PicBox::setImg(QImage im)
-{
-    imgScene->clear();
-    currentImg=im;
-    //注意：如果不清除原有对象，会大量消耗内存。
-    imgScene->addPixmap(QPixmap::fromImage(im));
-    this->setScene(imgScene);
-    setCursor(Qt::CrossCursor);
-}
+
 
 void PicBox::setImg(cv::Mat mat)
 {
 	imgScene->clear();
-	currentImg = cvMat2QImage(mat);
+	m_scaleFactor = 1;
+	srcImg = mat;
+	dstImg = srcImg.clone();
 	//注意：如果不清除原有对象，会大量消耗内存。
-	imgScene->addPixmap(QPixmap::fromImage(currentImg));
+	imgScene->addPixmap(QPixmap::fromImage(cvMat2QImage(srcImg)));
 	this->setScene(imgScene);
 	setCursor(Qt::CrossCursor);
 }
 
 void PicBox::zoomIn()
 {
-    m_scaleFactor *= 1.1;
+    m_scaleFactor *= 1.2;
     QMatrix matrix;
     matrix.scale(m_scaleFactor, m_scaleFactor);//两个方向上放缩比例
     this->setMatrix(matrix);
 }
 void PicBox::zoomOut()
 {
-    m_scaleFactor *= 0.9;
+    m_scaleFactor *= 0.8;
     QMatrix matrix;
     matrix.scale(m_scaleFactor, m_scaleFactor);//两个方向上放缩比例
     this->setMatrix(matrix);
+}
+void PicBox::openImg()
+{
+	QString srcpath = QFileDialog::getOpenFileName(this, "choose a image file", "", "Image File(*.jpg;*.png;*.bmp;*.tiff;*.tif)");
+	if (srcpath.isEmpty())
+		return;
+	this->setImg(cv::imread(srcpath.toStdString()));
+	
+}
+void PicBox::clearImg()
+{
+	imgScene->clear();
+	
+}
+
+void PicBox::saveImg()
+{
+	QString dstpath = QFileDialog::getSaveFileName(this, "Enter  file name", "c:/", "Image File(*.jpg;*.png;*.bmp;*.tiff;*.tif)");
+	if (dstpath.isEmpty())
+		return;
+	cv::imwrite(dstpath.toStdString(), dstImg);
+	
+}
+
+void PicBox::stretchImg(int)
+{
+
 }
 
 void PicBox::wheelEvent(QWheelEvent *event)
@@ -87,13 +112,35 @@ void PicBox::mousePressEvent(QMouseEvent *event)
 void PicBox::contextMenuEvent(QContextMenuEvent * event)
 {
 	QMenu* menu = new QMenu(this);             //创建上下文菜单
+	QMenu* graymenu = new QMenu("灰度调整",this);
+	QMenu* filtmenu = new QMenu("滤波", this);
+	
+	//创建动作
+	QAction* openAction = new QAction("打开", this);
+	connect(openAction, SIGNAL(triggered()), this, SLOT(openImg()));
+	QAction* saveasAction = new QAction("另存", this);
+	connect(saveasAction, SIGNAL(triggered()), this, SLOT(saveImg()));
+	QAction* clearAction = new QAction("清屏", this);
+	connect(clearAction, SIGNAL(triggered()), this, SLOT(clearImg()));
 
-	QAction* openmenu = new QAction("Open", this);
-	//connect(openmenu,SIGNAL(triggered()),this,open
-	QAction* saveasmenu = new QAction("Save as...", this);
+	QAction* lineadjust1 = new QAction("1%拉伸", this);
+	connect(lineadjust1, SIGNAL(triggered()), this, SLOT(stretchImg(1)));
+	QAction* lineadjust2 = new QAction("2%拉伸", this);
+	connect(lineadjust2, SIGNAL(triggered()), this, SLOT(stretchImg(2)));
+	QAction* lineadjust5 = new QAction("5%拉伸", this);
+	connect(lineadjust5, SIGNAL(triggered()), this, SLOT(stretchImg(5)));
 
-	menu->addAction(openmenu);
-	menu->addAction(saveasmenu);
+	graymenu->addAction(lineadjust1);
+	graymenu->addAction(lineadjust2);
+	graymenu->addAction(lineadjust5);
+
+	//添加动作
+	menu->addAction(openAction);
+	menu->addAction(saveasAction);
+	menu->addAction(clearAction);
+
+	menu->addMenu(graymenu);
+	menu->addMenu(filtmenu);
 	menu->exec(QCursor::pos());
 	event->accept();
 }
