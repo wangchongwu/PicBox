@@ -18,6 +18,7 @@ public:
 private:
     Ui::MainWindow *ui;
     PicBox* picshower;
+
 };
 
 #endif // MAINWINDOW_H

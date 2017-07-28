@@ -6,8 +6,10 @@
 #define PICBOX_H
 
 #include <QGraphicsView>
+#include <QGraphicsItem>
 #include <QWheelEvent>
 #include <QMouseEvent>
+#include <QMessageBox>
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QGraphicsPixmapItem>
@@ -22,29 +24,36 @@ class PicBox : public QGraphicsView//继承
     Q_OBJECT
 public:
     PicBox(QWidget *parent);
-	void setImg(cv::Mat);
-
+	void setImg(cv::Mat);//主要对外接口，设置一个全新的图像
+	double getScaleFactor();//查询当前放缩比
 protected://重写鼠标事件
     void wheelEvent(QWheelEvent* event);
     void mousePressEvent(QMouseEvent *event);
 	void contextMenuEvent(QContextMenuEvent *event);
-	
-
+	void mouseDoubleClickEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent *event);
 private slots:
 	void openImg();
 	void clearImg();
 	void saveImg();
-	void stretchImg(int);
-private:
+	void resetImg();
+	void testImg();//生成一个测试图像，不用每次都找图像测试
+	void stretchImg1();
+	void stretchImg2();
+	void stretchImg5();
+private://私有成员
 	QGraphicsScene* imgScene;
 	QGraphicsPixmapItem* pixmapItem;
 	Mat srcImg;//原始cv图像
 	Mat dstImg;//临时cv图像,保存中间状态
 	double m_scaleFactor;//放缩系数
 
-private:
+private://私有函数
+	void changeImg(cv::Mat);//改变图像，内部函数使用，不对外提供
 	void zoomIn();
 	void zoomOut();
+	int getDN(int x, int y);//获取DN值
+	void stretchImg(float);//实现拉伸的函数，控制拉伸比例
 };
 
 
